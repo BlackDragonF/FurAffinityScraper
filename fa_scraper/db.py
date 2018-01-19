@@ -10,7 +10,7 @@ def connect_db(db_name):
 
 def close_db(conn):
     conn.close()
-    logger.debug('datebase closed.')
+    logger.debug('database closed.')
 
 def create_artwork_table(db_conn):
     db_conn.execute('''
@@ -22,6 +22,7 @@ def create_artwork_table(db_conn):
                     AUTHOR         TEXT     NOT NULL,
                     POSTED         DATETIME,
                     CATEGORY       TEXT,
+                    THEME          TEXT,
                     SPECIES        TEXT,
                     GENDER         TEXT,
                     FAVORITES      INT,
