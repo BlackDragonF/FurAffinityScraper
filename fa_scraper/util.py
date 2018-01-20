@@ -14,7 +14,7 @@ def config_logger():
         'handlers': {
             'console': {
                 'class': 'logging.StreamHandler',
-                'level': 'INFO',
+                'level': 'DEBUG',
                 'formatter': 'standard'
             },
             'file': {

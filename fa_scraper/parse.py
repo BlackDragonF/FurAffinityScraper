@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger('default')
 
 def get_state(html_tag, state_name):
-    match = re.search(re.compile("<b>" + state_name + ":</b> (.+?)<br/>"), str(html_tag))
+    match = re.search(re.compile("<b>" + state_name + ":</b>\s*(.+?)<br/>"), str(html_tag))
     if match:
         return match.group(1)
 

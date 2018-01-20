@@ -6,5 +6,6 @@ if __name__ == "__main__":
     conn = db.connect_db("fa_scraper.db")
     db.create_artwork_table(conn)
     scraper = scrapy.Scraper()
-    scraper.next_arkwork()
+    while True:
+        scraper.next_arkwork()
     db.close_db(conn)

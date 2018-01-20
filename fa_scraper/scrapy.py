@@ -1,5 +1,6 @@
 from urllib import request
 from urllib import error
+from urllib.parse import quote
 
 from fa_scraper import parse
 
@@ -14,6 +15,7 @@ class Scraper(object):
     BASE_URL = 'https://www.furaffinity.net'
 
     def open_url(self, url):
+        url = quote(url, safe=":/")
         try:
             response = request.urlopen(url, timeout = 10)
         except error.HTTPError as e:
@@ -44,18 +46,33 @@ class Scraper(object):
         try:
             url = self.scrapying_queue.get()
         except Empty:
-            pass
+            logger.warn("scrapying queue empty.")
+            exit(-1)
 
-        image_id = url.replace('/view/', '').replace('/', '')
-        url = Scraper.BASE_URL+ url.replace('view', 'full')
-        result = parse.get_artwork_info(self.open_url(url))
+        image_id = url.replace('/', '').replace('view', '')
+        if url in self.scrapied_set:
+            logger.debug("image has been scrapied.")
+            return
 
-        print(result)
-        image_data = self.open_url(result["download_link"]).read()
+        full_url = Scraper.BASE_URL+ url.replace('view', 'full')
+        html = self.open_url(full_url)
         time.sleep(1)
-        with open(image_id, 'wb') as image:
-            image.write(image_data)
+        info = parse.get_artwork_info(html)
+        logger.debug("parsed info from artwork site.")
 
-        artwork_sites = result["artwork_sites"]
-        for artwork_site in artwork_sites:
-            self.scrapying_queue.put(artwork_site)
+        if "download_link" in info:
+            response = self.open_url(info["download_link"])
+            time.sleep(1)
+            data = response.read()
+            with open(image_id, 'wb') as image:
+                image.write(data)
+                logger.debug("image downloaded.")
+
+        if "artwork_sites" in info:
+            for artwork_site in info["artwork_sites"]:
+                if not artwork_site in self.scrapied_set:
+                    self.scrapying_queue.put(artwork_site)
+                else:
+                    logger.debug("site has been scrapied.")
+
+        self.scrapied_set.add(url)
