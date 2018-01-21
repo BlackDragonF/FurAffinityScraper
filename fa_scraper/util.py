@@ -3,7 +3,12 @@ import os
 import logging
 import logging.config
 
-def config_logger():
+def config_logger(config_dict):
+    logging.config.dictConfig(config_dict)
+    logger = logging.getLogger('default')
+    return logger
+
+def prepare(console_log_level = "INFO"):
     config = {
         'version': 1,
         'formatters': {
@@ -32,12 +37,8 @@ def config_logger():
             }
         }
     }
-    logging.config.dictConfig(config)
-    logger = logging.getLogger('default')
-    return logger
-
-def prepare():
-    logger = config_logger()
+    config['handlers']['console']['level'] = console_log_level
+    logger = config_logger(config)
 
     if not os.path.exists('images'):
         os.mkdir('images')

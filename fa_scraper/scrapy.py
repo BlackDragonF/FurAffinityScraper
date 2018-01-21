@@ -19,9 +19,9 @@ class Scraper(object):
         try:
             response = request.urlopen(url, timeout = 10)
         except error.HTTPError as e:
-            logger.warn('request sent to %s returned %u.' % (url, e.code))
+            logger.warning('request sent to %s returned %u.' % (url, e.code))
         except error.URLError as e:
-            logger.warn('request sent to %s failed: %s.' % (url, e.reason))
+            logger.warning('request sent to %s failed: %s.' % (url, e.reason))
 
         logger.debug('receive response from \'%s\'' % url)
         return response
@@ -46,7 +46,7 @@ class Scraper(object):
         try:
             url = self.scrapying_queue.get()
         except Empty:
-            logger.warn("scrapying queue empty.")
+            logger.warning("scrapying queue empty.")
             exit(-1)
 
         image_id = url.replace('/', '').replace('view', '')
@@ -73,6 +73,6 @@ class Scraper(object):
                 if not artwork_site in self.scrapied_set:
                     self.scrapying_queue.put(artwork_site)
                 else:
-                    logger.debug("site has been scrapied.")
+                    logger.debug("new site has been scrapied.")
 
         self.scrapied_set.add(url)
