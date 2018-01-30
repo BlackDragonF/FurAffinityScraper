@@ -5,6 +5,18 @@ import re
 import logging
 logger = logging.getLogger('default')
 
+def get_url_type(url):
+    if url.find("/view/") != -1:
+        return "artwork"
+    else if url.find("/gallery/") != -1:
+        return "gallery"
+    else if url.find("/favorites/") != -1:
+        return "favorites"
+    else if url.find("/user/") != -1:
+        return "user"
+    else:
+        return "undefined"
+
 def get_state(html_tag, state_name):
     match = re.search(re.compile("<b>" + state_name + ":</b>\s*(.+?)<br/>"), str(html_tag))
     if match:

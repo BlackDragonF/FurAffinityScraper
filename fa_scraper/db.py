@@ -31,4 +31,4 @@ def create_artwork_table(db_conn):
                     ADULT          BOOLEAN,
                     KEYWORDS       TEXT);''')
     db_conn.commit()
-    logger.debug('created artwork table if not exists.')
+    logger.info('created/retrieved artwork table.')

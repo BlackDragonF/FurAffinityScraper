@@ -18,6 +18,7 @@ class Scraper(object):
         url = quote(url, safe=":/")
         try:
             response = request.urlopen(url, timeout = 10)
+            time.sleep(1)
         except error.HTTPError as e:
             logger.warning('request sent to %s returned %u.' % (url, e.code))
         except error.URLError as e:
@@ -26,19 +27,27 @@ class Scraper(object):
         logger.debug('receive response from \'%s\'' % url)
         return response
 
+    def get_url(self):
+        try:
+            url = self.scrapying_queue.get()
+        except Empty:
+            logger.warning("scrapying queue empty.")
+        return url
+
     def __init__(self):
         self.scrapied_set = set()
         self.scrapying_queue = queue.Queue()
 
         main_html = self.open_url(Scraper.BASE_URL)
-        time.sleep(1)
         if main_html:
             artwork_info = parse.get_artwork_info(main_html)
             if "artwork_sites" in artwork_info:
                 for artwork_site in artwork_info["artwork_sites"]:
                     self.scrapying_queue.put(artwork_site)
 
-        logger.debug("scraper instance initialized.")
+        logger.debug("scraper initialized.")
+
+
 
 
 
@@ -56,13 +65,11 @@ class Scraper(object):
 
         full_url = Scraper.BASE_URL+ url.replace('view', 'full')
         html = self.open_url(full_url)
-        time.sleep(1)
         info = parse.get_artwork_info(html)
         logger.debug("parsed info from artwork site.")
 
         if "download_link" in info:
             response = self.open_url(info["download_link"])
-            time.sleep(1)
             data = response.read()
             with open(image_id, 'wb') as image:
                 image.write(data)

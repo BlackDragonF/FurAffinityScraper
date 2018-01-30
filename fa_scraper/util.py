@@ -39,6 +39,7 @@ def prepare(console_log_level = "INFO"):
     }
     config['handlers']['console']['level'] = console_log_level
     logger = config_logger(config)
+    logger.info("set console log level to %s" % console_log_level)
 
     if not os.path.exists('images'):
         os.mkdir('images')
