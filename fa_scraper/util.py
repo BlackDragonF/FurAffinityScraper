@@ -1,46 +1,24 @@
 import os
 
 import logging
-import logging.config
+logger = logging.getLogger('default')
 
-def config_logger(config_dict):
-    logging.config.dictConfig(config_dict)
-    logger = logging.getLogger('default')
-    return logger
-
-def prepare(console_log_level = "INFO"):
-    config = {
-        'version': 1,
-        'formatters': {
-            'standard': {
-                'format': '%(asctime)s - [%(levelname)s] %(message)s'
-            }
-        },
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-                'level': 'DEBUG',
-                'formatter': 'standard'
-            },
-            'file': {
-                'class': 'logging.FileHandler',
-                'filename': 'fa_scraper.log',
-                'level': 'DEBUG',
-                'formatter': 'standard'
-            }
-        },
-        'loggers': {
-            'default': {
-                'handlers': ['console', 'file'],
-                'level': 'DEBUG',
-                'propagate': True
-            }
-        }
-    }
-    config['handlers']['console']['level'] = console_log_level
-    logger = config_logger(config)
-    logger.info("set console log level to %s" % console_log_level)
-
+def create_images_directory():
     if not os.path.exists('images'):
         os.mkdir('images')
-        logger.info("result directory 'images' created.")
+        logger.info('directory "images" created.')
+
+def get_url_type(url, url_types):
+    for url_type in url_types:
+        sub_url = '/' + url_type + '/'
+        if url.find(sub_url) != -1:
+            return url_type
+
+    logger.warning('unknown url type from url: %s' % url)
+    return 'unknown'
+
+def combine_filename(artwork_id, filename_extension):
+    return artwork_id + '.' + filename_extension
+
+def get_fullview_url(url):
+    return url.replace('view', 'full')

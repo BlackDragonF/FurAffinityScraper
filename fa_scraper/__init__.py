@@ -1,1 +1,1 @@
-__all__ = ['db', 'scrapy', 'util', 'parse']
+__all__ = ['database', 'scrapy', 'util', 'parse']
