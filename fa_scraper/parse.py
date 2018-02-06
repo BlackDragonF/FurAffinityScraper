@@ -4,12 +4,26 @@ from http.client import HTTPResponse
 
 import re
 
+from fa_scraper import util
+from fa_scraper.constant import *
+
 import logging
 logger = logging.getLogger('default')
 
 class Parser(object):
+    URL_TYPE_TABLE = {}
 
-    URL_TYPES = ['view', 'gallery', 'favorites', 'user']
+    @classmethod
+    def generate_url_type_table(cls):
+        url_type_table = {}
+
+        for url_type in URL_TYPES:
+            url_type_table[url_type] = '^(/' + url_type + '/)'
+
+        url_type_table['user'] = '^(/user/)(?!history/)'
+
+        logger.debug('url type table generated.')
+        cls.URL_TYPE_TABLE = url_type_table
 
     @staticmethod
     def get_url_type(url, url_types):
@@ -22,6 +36,9 @@ class Parser(object):
         return 'unknown'
 
     def __init__(self, html):
+        if not Parser.URL_TYPE_TABLE:
+            Parser.generate_url_type_table()
+
         self.bs = BeautifulSoup(html, "html.parser")
         logger.info('parser initialized.')
 
@@ -29,9 +46,8 @@ class Parser(object):
         sites = []
         site_count = 0
 
-        for url_type in Parser.URL_TYPES:
-            regex = '^(/' + url_type + '/)'
-            temp_sites = self.bs.findAll('a', href = re.compile(regex))
+        for url_type in URL_TYPES:
+            temp_sites = self.bs.findAll('a', href = re.compile(Parser.URL_TYPE_TABLE[url_type]))
             if temp_sites:
                 temp_sites = list(map(lambda tag: tag.get('href'), temp_sites))
                 site_count = site_count + len(temp_sites)
@@ -42,10 +58,7 @@ class Parser(object):
         return sites
 
 
-
-
 class ArtworkParser(Parser):
-
     ARTWORK_ATTRIBUTES = ['Category', 'Theme', 'Species', 'Gender', 'Favorites', 'Comments', 'Views', 'Resolution', 'Keywords', 'Author', 'Name']
     REGEX_TABLE = {}
     TAG_TABLE = {}
@@ -57,9 +70,9 @@ class ArtworkParser(Parser):
         for attribute in cls.ARTWORK_ATTRIBUTES:
             regex_table[attribute] = '<b>' + attribute + ':</b>\s*(.+?)\s*<br/>'
 
-        regex_table.update({'Keywords': '<a href=".*">(.+)</a>',
-                        'Author': '<a href=".*">(.+)</a>',
-                        'Name': '<b>(.+)</b>'})
+        regex_table.update({'Keywords': '<a href=".*">(.+?)</a>',
+                            'Author': '<a href=".*">(.+)</a>',
+                            'Name': '<b>(.+)</b>'})
 
         logger.debug('artwork parser\'s regex table generated.')
         cls.REGEX_TABLE = regex_table
@@ -78,16 +91,11 @@ class ArtworkParser(Parser):
         logger.debug('artwork parser\'s tag table generated.')
         cls.TAG_TABLE = tag_table
 
-
     @staticmethod
     def get_filename_extension(link):
         match = re.search(re.compile('.*\.(.+)'), link)
         if match:
             return match.group(1)
-
-    @staticmethod
-    def get_artwork_id(url):
-        return url.replace('/', '').replace('full', '')
 
     @staticmethod
     def get_fullview_url(url):
@@ -125,21 +133,20 @@ class ArtworkParser(Parser):
 
     @staticmethod
     def get_matched_string(tag, regex):
-        match = re.search(re.compile(regex), str(tag))
+        match = re.findall(re.compile(regex), str(tag))
         if match:
-            return match.group(1)
+            return match
 
     @staticmethod
     def format_resolution(resolution):
         temp = resolution.split('x')
         if (len(temp) >= 2):
-            return (int(temp[0]), int(temp[1]))
+            return (temp[0], temp[1])
 
     @staticmethod
-    def extract_posted_time(posted_time):
+    def get_posted_time(posted_time):
         if posted_time.has_attr('title'):
             return posted_time['title']
-
 
     def get_artwork_attributes(self):
         unparsed_set = set(ArtworkParser.ARTWORK_ATTRIBUTES)
@@ -151,7 +158,7 @@ class ArtworkParser(Parser):
             except AttributeError as error:
                 continue
             regex = ArtworkParser.REGEX_TABLE[attribute]
-            content = self.get_matched_string(tag, regex)
+            content = self.get_matched_string(tag, regex)[0]
 
             if not content:
                 continue
@@ -167,109 +174,12 @@ class ArtworkParser(Parser):
                 unparsed_set.remove(attribute)
 
         if self.posted_tag:
-            posted_time = self.extract_posted_time(self.posted_tag)
+            posted_time = self.get_posted_time(self.posted_tag)
             if posted_time:
-                attributes['Posted'] = posted_time
+                posted_time = util.parse_datetime(posted_time)
+                attributes['Posted'] = posted_time.strftime("%Y-%m-%d %H:%M")
         else:
             unparsed_set.add('Posted')
 
+        attributes['Adult'] = False
         return attributes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def get_keywords(tag):
-#     keywords = re.findall(re.compile('<a href=\'.*\'>(.+?)</a>'), str(tag))
-#     if keywords:
-#         return keywords
-
-# def get_author(cat_tag):
-#     match = re.search(re.compile('<b>(.+)</b>'), str(cat_tag))
-#     if match:
-#         return match.group(1)
-#
-# def get_name(cat_tag):
-#     match = re.search(re.compile('<a href=\'.*\'>(.+)</a>'), str(cat_tag))
-#     if match:
-#         return match.group(1)
-#
-# def get_artwork_attributes(tag, attr):
-#     empty_attributes = set()
-#
-#     for attribute in attributes:
-#         regex = generate_regex(attribute)
-#         content = get_matched_string(tag, regex)
-#         if content:
-#             attr[attribute] = content
-#         else:
-#             empty_attributes.add(attribute)
-#
-#     resolution = get_state(tag, 'Resolution')
-#     if resolution:
-#         resolution = resolution.split('x')
-#         if (len(resolution) >= 2):
-#             attr['width'] = int(resolution[0])
-#             attr['height'] = int(resolution[1])
-#     else:
-#         empty_attributes.add('Resolution')
-#
-#     keywords = tag.find('div', {'id': 'keywords'})
-#     keywords = get_keywords(keywords_tag)
-#     if keywords:
-#         attr['keywords'] = keywords
-#     else:
-#         logger.debug('unable to get keywords.')
-#
-#     attr['adult'] = False
-#
-# def get_artwork_info(html, url_types):
-#     bs = BeautifulSoup(html, 'html.parser')
-#     info = {}
-#     attr = {}
-#
-#     image_tag = bs.find('img', {'id': 'submissionImg'})
-#     if image_tag and image_tag.has_attr('src'):
-#         download = 'https:' + image_tag['src']
-#         logger.debug('retrieved download link - "%s".' % download_link)
-#         info['download'] = download
-#     else:
-#         logger.debug('unable to retrieve download link.')
-
-    # artwork_cat = bs.find('td', {'class': 'cat'})
-    # artwork_stats = bs.find('td', {'class': 'alt1 stats-container'})
-    # if artwork_cat:
-    #     author = get_author(artwork_cat)
-    #     name = get_name(artwork_cat)
-    #     if author:
-    #         attr['author'] = author
-    #     else:
-    #         logger.debug('unable to get author.')
-    #     if name:
-    #         attr['name'] = name
-    #     else:
-    #         logger.debug('unable to get name.')
-    # if artwork_stats:
-    #     posted = artwork_stats.find('span', {'class': 'popup_date'})
-    #     if posted and posted.has_attr('title'):
-    #         attr['posted'] = posted['title']
-    #         get_artwork_attr(artwork_stats, attr)
-    #     else:
-    #         logger.debug('unable to get posted time.')
-    # logger.debug('artwork attributes collected.')
-    # info['attributes'] = attr
-    #
-    # sites = get_page_links(bs, url_types)
-    # info['sites'] = sites
-    #
-    # return info
