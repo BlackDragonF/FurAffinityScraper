@@ -13,6 +13,8 @@ import queue
 
 import time
 
+import json
+
 class Scraper(object):
 
     BASE_URL = 'https://www.furaffinity.net'
@@ -62,11 +64,13 @@ class Scraper(object):
 
     def scrapy_pending_url(self):
         url = self.get_scrapying_url()
+        if url in self.scrapied_set:
+            return
         origin_url = url
 
-        url_type = util.get_url_type(url, Scraper.URL_TYPES)
+        url_type = parse.Parser.get_url_type(url, Scraper.URL_TYPES)
         if url_type == 'view':
-            url = util.get_fullview_url(url)
+            url = parse.ArtworkParser.get_fullview_url(url)
         elif url_type == 'unknown':
             logger.info('skipped unknown url %s' % url)
             return
@@ -77,9 +81,11 @@ class Scraper(object):
             if url_type == 'view':
                 parser = parse.ArtworkParser(html)
                 download_link = parser.get_download_link()
-                if download_link:
-                    filename = util.combine_filename(parser.get_artwork_id(url), parser.get_filename_extension(download_link))
-                    Scraper.download_artwork(filename, download_link)
+                attributes = parser.get_artwork_attributes()
+                print(json.dumps(attributes, indent = 1))
+                # if download_link:
+                #     filename = util.combine_filename(parser.get_artwork_id(url), parser.get_filename_extension(download_link))
+                #     Scraper.download_artwork(filename, download_link)
             else:
                 parser = parse.Parser(html)
 
@@ -94,7 +100,7 @@ class Scraper(object):
         data = response.read()
         with open('images/' + filename, 'wb') as image:
             image.write(data)
-            logger.debug('image downloaded.')
+            logger.debug('image %s downloaded.' % filename)
 
 
 
