@@ -2,6 +2,9 @@ from urllib import request
 from urllib import error
 from urllib.parse import quote
 
+import requests
+import cfscrape
+
 from fa_scraper import parse
 from fa_scraper import util
 from fa_scraper.constant import *
@@ -22,21 +25,30 @@ class Scraper(object):
     def generate_user_agent():
         return random.choice(USER_AGENTS)
 
-    @staticmethod
-    def open_url(url):
-        url = quote(url, safe=':/')
-        try:
-            r = request.Request(url)
-            r.add_header('User-Agent', Scraper.generate_user_agent())
-            response = request.urlopen(r, timeout = 10)
-            logger.debug('received response from "%s"' % url)
-            return response
-        except error.HTTPError as e:
-            logger.warning('request sent to %s returned %u.' % (url, e.code))
-        except error.URLError as e:
-            logger.warning('request sent to %s failed: %s.' % (url, e.reason))
-        finally:
-            time.sleep(10)
+    def open_url(self, url):
+        url = quote(url, safe = ':/')
+        response = self.scraper.get(url)
+        if response.status_code == 200:
+            logger.debug('received response from "%s".' % url)
+        else:
+            logger.warning('request sent to "%s" return %u.' % (url, response.status_code))
+
+        time.sleep(4)
+        return response.content
+
+        # url = quote(url, safe=':/')
+        # try:
+        #     r = request.Request(url)
+        #     r.add_header('User-Agent', Scraper.generate_user_agent())
+        #     response = request.urlopen(r, timeout = 10)
+        #     logger.debug('received response from "%s"' % url)
+        #     return response
+        # except error.HTTPError as e:
+        #     logger.warning('request sent to %s returned %u.' % (url, e.code))
+        # except error.URLError as e:
+        #     logger.warning('request sent to %s failed: %s.' % (url, e.reason))
+        # finally:
+        #     time.sleep(10)
 
     def get_scrapying_url(self):
         try:
@@ -60,7 +72,9 @@ class Scraper(object):
         self.scrapied_set = set()
         self.scrapying_queue = queue.Queue()
 
-        main_html = Scraper.open_url(BASE_URL)
+        self.scraper = cfscrape.create_scraper()
+
+        main_html = self.open_url(BASE_URL)
         if main_html:
             parser = parse.Parser(main_html)
             sites = parser.get_page_links()
@@ -81,7 +95,7 @@ class Scraper(object):
             logger.info('skipped unknown url %s' % url)
             return
 
-        html = Scraper.open_url(BASE_URL + url)
+        html = self.open_url(BASE_URL + url)
         if html:
             logger.debug('scrapied site with url type: %s' % url_type)
             if url_type == 'view':
@@ -89,9 +103,10 @@ class Scraper(object):
                 attributes = parser.get_artwork_attributes()
                 download_link = parser.get_download_link()
                 print(json.dumps(attributes, indent = 1))
-                # if download_link:
-                #     filename = util.combine_filename(parser.get_artwork_id(url), parser.get_filename_extension(download_link))
-                #     Scraper.download_artwork(filename, download_link)
+                if download_link:
+                    filename = util.combine_filename(parser.get_artwork_id(url), parser.get_filename_extension(download_link))
+                    self.download_artwork(filename, download_link)
+            
             else:
                 parser = parse.Parser(html)
 
@@ -103,10 +118,15 @@ class Scraper(object):
     def get_artwork_id(url):
         return url.replace('/', '').replace('full', '')
 
-    @staticmethod
-    def download_artwork(filename, download_link):
-        response = Scraper.open_url(download_link)
-        data = response.read()
-        with open('images/' + filename, 'wb') as image:
-            image.write(data)
-            logger.debug('image %s downloaded.' % filename)
+    def download_artwork(self, filename, download_link):
+        data = self.open_url(download_link)
+        if not data:
+            return False
+        try:
+            with open('images/' + filename, 'wb') as image:
+                image.write(data)
+                logger.debug('image "%s" downloaded.' % filename)
+                return True
+        except EnvironmentError:
+            logger.warning('failed to download image "%s"' % filename)
+            return False

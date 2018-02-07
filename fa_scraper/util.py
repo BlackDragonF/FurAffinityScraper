@@ -11,13 +11,13 @@ def create_images_directory():
         logger.info('directory "images" created.')
 
 def combine_filename(artwork_id, filename_extension):
-    return artwork_id + '.' + filename_extension
+    if filename_extension:
+        return artwork_id + '.' + filename_extension
+    else:
+        return artwork_id
 
 def parse_datetime(date):
     return parse(date)
 
 def convert_boolean(boolean):
-    if boolean:
-        return 1
-    else:
-        return 0
+    return 1 if boolean else 0
