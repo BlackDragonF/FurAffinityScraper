@@ -90,5 +90,7 @@ if __name__ == '__main__':
     scraper = scrapy.Scraper()
 
     while True:
-        scraper.scrapy_pending_url()
+        artwork = scraper.scrapy_pending_url()
+        if artwork:
+            db.insert_artwork(artwork)
     # db.close_db(conn)

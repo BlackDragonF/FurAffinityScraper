@@ -35,17 +35,18 @@ class Database(object):
 
     @staticmethod
     def attribute_dictionary_to_tuple(artwork):
-        return (artwork['ID'], artwork['Name'], artwork['Width'], artwork['Height'],
-        artwork['Author'], artwork['Posted'], artwork['Category'], artwork['Theme'],
-        artwork['Species'], artwork['Gender'], artwork['Favorites'],
-        artwork['Comments'], artwork['Views'], artwork['Adult'], artwork['Keywords'])
+        return (artwork.get('ID'), artwork.get('Name'), artwork.get('Width'), artwork.get('Height'),
+        artwork.get('Author'), artwork.get('Posted'), artwork.get('Category'), artwork.get('Theme'),
+        artwork.get('Species'), artwork.get('Gender'), artwork.get('Favorites'),
+        artwork.get('Comments'), artwork.get('Views'), artwork.get('Adult'), artwork.get('Keywords'))
 
     def insert_artwork(self, artwork):
-        artwork['ADULT'] = util.convert_boolean(artwork['ADULT'])
+        artwork['Adult'] = util.convert_boolean(artwork['Adult'])
         attribute_tuple = self.attribute_dictionary_to_tuple(artwork)
+        print(attribute_tuple)
         self.conn.execute('INSERT INTO ARTWORK (ID, NAME, WIDTH, HEIGHT, AUTHOR, '
                           'POSTED, CATEGORY, THEME, SPECIES, GENDER, FAVORITES, '
-                          'COMMENTS, VIEWS, ADULT, KEYWORDS) VALUES(%d, %s, %d, '
-                          '%d, %s, %s, %s, %s, %s, %s, %d, %d, %d, %d, %s)' % attribute_tuple)
+                          'COMMENTS, VIEWS, ADULT, KEYWORDS) VALUES(?, ?, ?, '
+                          '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', attribute_tuple)
         self.conn.commit()
         logger.debug('inserted artwork information into artwork table.')

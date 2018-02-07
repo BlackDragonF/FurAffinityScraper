@@ -38,7 +38,7 @@ class Parser(object):
 
     def __init__(self, html):
         if not Parser.URL_REGEX_TABLE:
-            Parser.generate_url_regexes()
+            Parser.generate_url_regex_table()
 
         self.bs = BeautifulSoup(html, "html.parser")
         logger.debug('parser initialized.')
@@ -96,7 +96,7 @@ class ArtworkParser(Parser):
                           'Author'      : 'cat_tag',
                           'Keywords'    : 'keywords_tag'})
 
-        logger.debug('artwork parser\'s tag table(stores tag name each attibute '
+        logger.debug('artwork parser\'s tag table(stores tag name each attribute '
                      'uses) generated.')
         cls.TAG_TABLE = tag_table
 
@@ -146,8 +146,8 @@ class ArtworkParser(Parser):
     def format_resolution(resolution):
         resolution = resolution.split('x')
         if (len(resolution) >= 2):
-            formatted_resolution = {'Width'     : resolution[0],
-                                    'Height'    : resolution[1]}
+            formatted_resolution = {'Width'     : int(resolution[0]),
+                                    'Height'    : int(resolution[1])}
             return formatted_resolution
 
     @staticmethod
@@ -162,7 +162,10 @@ class ArtworkParser(Parser):
     @staticmethod
     def generate_unparsed_attributes_log(unparsed_attributes):
         unparsed_attributes = list(unparsed_attributes)
-        return 'unparsed attribute: ' + reduce(lambda x, y : x + ' ' + y, unparsed_attributes) + '.'
+        if unparsed_attributes:
+            return 'unparsed attributes: ' + reduce(lambda x, y : x + ' ' + y, unparsed_attributes) + '.'
+        else:
+            return 'all attributes parsed.'
 
     def get_artwork_attributes(self):
         unparsed_set = set(ArtworkParser.ARTWORK_ATTRIBUTES)
@@ -187,14 +190,13 @@ class ArtworkParser(Parser):
             content = self.get_matched_string(tag, regex)
 
             if not content:
-                logger.debug('failed to extract attribute: %s.' % attibute)
                 continue
             else:
-                if attibute == 'Keywords':
+                if attribute == 'Keywords':
                     content = self.combine_keywords(content)
                 else:
                     content = content[0]
-                    if attibute in ArtworkParser.INT_ATTRIBUTES:
+                    if attribute in ArtworkParser.INT_ATTRIBUTES:
                         content = int(content)
 
             if attribute == 'Resolution':
@@ -209,6 +211,7 @@ class ArtworkParser(Parser):
         attributes['Adult'] = False
 
         logger.debug(self.generate_unparsed_attributes_log(unparsed_set))
+
         return attributes
 
     @staticmethod

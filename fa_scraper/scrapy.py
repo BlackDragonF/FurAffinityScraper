@@ -16,10 +16,6 @@ import queue
 
 import time
 
-import random
-
-import json
-
 class Scraper(object):
     @staticmethod
     def generate_user_agent():
@@ -33,7 +29,7 @@ class Scraper(object):
         else:
             logger.warning('request sent to "%s" return %u.' % (url, response.status_code))
 
-        time.sleep(4)
+        time.sleep(10)
         return response.content
 
         # url = quote(url, safe=':/')
@@ -77,7 +73,7 @@ class Scraper(object):
         main_html = self.open_url(BASE_URL)
         if main_html:
             parser = parse.Parser(main_html)
-            sites = parser.get_page_links()
+            sites = parser.get_all_urls()
             self.add_unscrapied_urls(sites)
 
         logger.debug('scraper initialized.')
@@ -85,34 +81,39 @@ class Scraper(object):
     def scrapy_pending_url(self):
         url = self.get_scrapying_url()
         if not url or url in self.scrapied_set:
-            return
+            logger.debug('failed to get url/url has been scrapied.')
+            return None
         origin_url = url
 
-        url_type = parse.Parser.get_url_type(url, URL_TYPES)
-        if url_type == 'view':
-            url = parse.ArtworkParser.get_fullview_url(url)
-        elif url_type == 'unknown':
-            logger.info('skipped unknown url %s' % url)
-            return
+        url_type = parse.Parser.get_url_type(url)
+        if url_type == 'unknown':
+            logger.info('skipped unknown url "%s".' % url)
+            return None
 
+        if url_type == 'view':
+            url = parse.ArtworkParser.view_to_full(url)
         html = self.open_url(BASE_URL + url)
         if html:
-            logger.debug('scrapied site with url type: %s' % url_type)
-            if url_type == 'view':
-                parser = parse.ArtworkParser(html)
-                attributes = parser.get_artwork_attributes()
-                download_link = parser.get_download_link()
-                print(json.dumps(attributes, indent = 1))
-                if download_link:
-                    filename = util.combine_filename(parser.get_artwork_id(url), parser.get_filename_extension(download_link))
-                    self.download_artwork(filename, download_link)
-            
-            else:
-                parser = parse.Parser(html)
+            logger.debug('scrapied site with url type: %s.' % url_type)
 
-            sites = parser.get_page_links()
-            self.add_unscrapied_urls(sites)
+            parser = parse.ArtworkParser(html) if url_type == 'view' else parse.Parser(html)
+
+            urls = parser.get_all_urls()
+            self.add_unscrapied_urls(urls)
             self.add_scrapied_url(origin_url)
+
+            if url_type == 'view':
+                attributes = parser.get_artwork_attributes()
+
+                download_link = parser.get_download_link()
+                if download_link and attributes['Category'] == 'Artwork (Digital)':
+                    ID = self.get_artwork_id(url)
+
+                    filename = util.combine_filename(ID, parser.get_filename_extension(download_link))
+                    self.download_artwork(filename, download_link)
+
+                    attributes['ID'] = int(ID)
+                    return attributes
 
     @staticmethod
     def get_artwork_id(url):
