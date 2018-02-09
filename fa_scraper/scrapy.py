@@ -1,5 +1,3 @@
-from urllib import request
-from urllib import error
 from urllib.parse import quote
 
 import requests
@@ -23,7 +21,13 @@ class Scraper(object):
 
     def open_url(self, url):
         url = quote(url, safe = ':/')
-        response = self.scraper.get(url)
+
+        try:
+            response = self.scraper.get(url, timeout = 30)
+        except:
+            logger.warning('request sent to "%s" failed.' % url)
+            return None
+
         if response.status_code == 200:
             logger.debug('received response from "%s".' % url)
         else:
@@ -31,20 +35,6 @@ class Scraper(object):
 
         time.sleep(10)
         return response.content
-
-        # url = quote(url, safe=':/')
-        # try:
-        #     r = request.Request(url)
-        #     r.add_header('User-Agent', Scraper.generate_user_agent())
-        #     response = request.urlopen(r, timeout = 10)
-        #     logger.debug('received response from "%s"' % url)
-        #     return response
-        # except error.HTTPError as e:
-        #     logger.warning('request sent to %s returned %u.' % (url, e.code))
-        # except error.URLError as e:
-        #     logger.warning('request sent to %s failed: %s.' % (url, e.reason))
-        # finally:
-        #     time.sleep(10)
 
     def get_scrapying_url(self):
         try:
@@ -80,8 +70,11 @@ class Scraper(object):
 
     def scrapy_pending_url(self):
         url = self.get_scrapying_url()
-        if not url or url in self.scrapied_set:
-            logger.debug('failed to get url/url has been scrapied.')
+        if not url:
+            logger.debug('failed to get url.')
+            return None
+        elif url in self.scrapied_set:
+            logger.debug('url has been scrapied.')
             return None
         origin_url = url
 
@@ -100,7 +93,6 @@ class Scraper(object):
 
             urls = parser.get_all_urls()
             self.add_unscrapied_urls(urls)
-            self.add_scrapied_url(origin_url)
 
             if url_type == 'view':
                 attributes = parser.get_artwork_attributes()
@@ -108,12 +100,15 @@ class Scraper(object):
                 download_link = parser.get_download_link()
                 if download_link and attributes['Category'] == 'Artwork (Digital)':
                     ID = self.get_artwork_id(url)
+                    attributes['ID'] = int(ID)
 
                     filename = util.combine_filename(ID, parser.get_filename_extension(download_link))
-                    self.download_artwork(filename, download_link)
+                    if self.download_artwork(filename, download_link):
+                        self.add_scrapied_url(origin_url)
+                        return attributes
+            else:
+                self.add_scrapied_url(origin_url)
 
-                    attributes['ID'] = int(ID)
-                    return attributes
 
     @staticmethod
     def get_artwork_id(url):

@@ -3,6 +3,8 @@ from fa_scraper import *
 import argparse
 import sys
 
+import os
+
 import logging
 import logging.config
 
@@ -78,19 +80,44 @@ def config_logger(console_log_level):
     logger.debug('logger configured.')
     return logger
 
+def check_and_fix_artworks(db, scraper):
+    artwork_ids = set(db.get_artwork_ids())
+    os.chdir('images')
+
+    artworks = os.listdir('.')
+    for artwork in artworks:
+        if os.path.isfile(artwork):
+            artwork_id = int(os.path.splitext(os.path.basename(artwork))[0])
+            if artwork_id in artwork_ids:
+                artwork_ids.remove(artwork_id)
+
+    db.delete_artworks(artwork_ids)
+
+    unscrapied_urls = list(map(util.generate_url_from_id, list(artwork_ids)))
+    scraper.add_unscrapied_urls(unscrapied_urls)
+
+    os.chdir('..')
+
+
+
+
 if __name__ == '__main__':
     arguments = parse_arguments()
 
     log_level = arguments.log_level[0].upper()
     logger = config_logger(log_level)
 
-    util.create_images_directory()
+    if not util.create_images_directory():
+        exit(-1)
 
     db = database.Database('fa_scraper.db')
     scraper = scrapy.Scraper()
 
+    if not arguments.skip_check:
+        check_and_fix_artworks(db, scraper)
+    
     while True:
         artwork = scraper.scrapy_pending_url()
         if artwork:
             db.insert_artwork(artwork)
-    # db.close_db(conn)
+    db.close_db(conn)
