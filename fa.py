@@ -25,7 +25,7 @@ def parse_arguments():
         '--scrapy-mode',
         nargs = 1,
         default = ['default'],
-        choices = ['default', 'update', 'fusion'],
+        choices = ['default', 'update'],
         help = 'sets scrapying mode, default: default'
     )
     argparser.add_argument(
@@ -83,6 +83,7 @@ def config_logger(console_log_level):
 def check_and_fix_artworks(db, scraper):
     artwork_ids = set(db.get_artwork_ids())
     os.chdir('images')
+    logger.debug('changed working directory to images.')
 
     artworks = os.listdir('.')
     for artwork in artworks:
@@ -97,8 +98,8 @@ def check_and_fix_artworks(db, scraper):
     scraper.add_unscrapied_urls(unscrapied_urls)
 
     os.chdir('..')
-
-
+    logger.debug('changed working directory to origin.')
+    logger.info('%u wrong records removed from database.' % len(artwork_ids))
 
 
 if __name__ == '__main__':
@@ -112,12 +113,28 @@ if __name__ == '__main__':
 
     db = database.Database('fa_scraper.db')
     scraper = scrapy.Scraper()
+    logger.info('initialization completed.')
 
     if not arguments.skip_check:
         check_and_fix_artworks(db, scraper)
-    
-    while True:
-        artwork = scraper.scrapy_pending_url()
-        if artwork:
-            db.insert_artwork(artwork)
+        logger.info('integrity check completed.')
+    else:
+        logger.info('skipped integrity check.')
+
+    if arguments.scrapy_mode[0] == 'default':
+        while True:
+            artwork = scraper.scrapy_pending_url()
+            if artwork:
+                artwork['Added'] = util.get_current_time()
+                db.insert_or_replace_artwork(artwork)
+    elif arguments.scrapy_mode[0] == 'update':
+        expired_artwork_ids = db.get_expired_artwork_ids(arguments.expire_time)
+        for artwork_id in expired_artwork_ids:
+            artwork = scraper.scrapy_expired_url(util.generate_url_from_id(artwork_id))
+            if artwork:
+                artwork['ID'] = artwork_id
+                artwork['Added'] = util.get_current_time()
+                db.insert_or_replace_artwork(artwork)
+
     db.close_db(conn)
+    exit(0)

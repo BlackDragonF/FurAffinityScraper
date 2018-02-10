@@ -1,5 +1,7 @@
 import os
 
+import time
+
 from dateutil.parser import parse
 
 from fa_scraper.constant import *
@@ -32,6 +34,9 @@ def combine_filename(artwork_id, filename_extension):
 
 def parse_datetime(date):
     return parse(date)
+
+def get_current_time():
+    return time.strftime("%Y-%m-%d %H:%M", time.localtime())
 
 def convert_boolean(boolean):
     return 1 if boolean else 0

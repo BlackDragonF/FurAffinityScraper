@@ -15,6 +15,8 @@ import queue
 import time
 
 class Scraper(object):
+    SCRAPIED_BASE = False
+
     @staticmethod
     def generate_user_agent():
         return random.choice(USER_AGENTS)
@@ -60,15 +62,18 @@ class Scraper(object):
 
         self.scraper = cfscrape.create_scraper()
 
-        main_html = self.open_url(BASE_URL)
-        if main_html:
-            parser = parse.Parser(main_html)
-            sites = parser.get_all_urls()
-            self.add_unscrapied_urls(sites)
-
         logger.debug('scraper initialized.')
 
     def scrapy_pending_url(self):
+        if not Scraper.SCRAPIED_BASE:
+            main_html = self.open_url(BASE_URL)
+            if main_html:
+                parser = parse.Parser(main_html)
+                sites = parser.get_all_urls()
+                self.add_unscrapied_urls(sites)
+                logger.debug('base url scrapied.')
+                Scraper.SCRAPIED_BASE = True
+
         url = self.get_scrapying_url()
         if not url:
             logger.debug('failed to get url.')
@@ -109,6 +114,14 @@ class Scraper(object):
             else:
                 self.add_scrapied_url(origin_url)
 
+    def scrapy_expired_url(self, url):
+        url = parse.ArtworkParser.view_to_full(url)
+        html = self.open_url(url)
+        if html:
+            parser = parse.ArtworkParser(html)
+
+            attributes = parser.get_artwork_attributes()
+            return attributes
 
     @staticmethod
     def get_artwork_id(url):
