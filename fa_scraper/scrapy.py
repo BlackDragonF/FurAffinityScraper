@@ -27,13 +27,13 @@ class Scraper(object):
         try:
             response = self.scraper.get(url, timeout = 30)
         except:
-            logger.warning('request sent to "%s" failed.' % url)
+            logger.warning('error when sending request to "%s".' % url)
             return None
 
         if response.status_code == 200:
             logger.debug('received response from "%s".' % url)
         else:
-            logger.warning('request sent to "%s" return %u.' % (url, response.status_code))
+            logger.warning('request sent to "%s" returned error code: %u.' % (url, response.status_code))
 
         time.sleep(10)
         return response.content
@@ -42,7 +42,7 @@ class Scraper(object):
         try:
             return self.scrapying_queue.get(False)
         except queue.Empty:
-            logger.error('scrapying queue empty.')
+            logger.fatal('scrapying queue empty.')
             exit(-1)
 
     def add_unscrapied_urls(self, urls):
@@ -76,7 +76,7 @@ class Scraper(object):
 
         url = self.get_scrapying_url()
         if not url:
-            logger.debug('failed to get url.')
+            logger.warning('failed to get url.')
             return None
         elif url in self.scrapied_set:
             logger.debug('url has been scrapied.')
@@ -92,7 +92,7 @@ class Scraper(object):
             url = parse.ArtworkParser.view_to_full(url)
         html = self.open_url(BASE_URL + url)
         if html:
-            logger.debug('scrapied site with url type: %s.' % url_type)
+            logger.info('scrapied "%s" site with url %s.' % (url_type, url))
 
             parser = parse.ArtworkParser(html) if url_type == 'view' else parse.Parser(html)
 
@@ -118,10 +118,13 @@ class Scraper(object):
         url = parse.ArtworkParser.view_to_full(url)
         html = self.open_url(url)
         if html:
+            logger.info('scrapied expired url %s.' % url)
             parser = parse.ArtworkParser(html)
 
             attributes = parser.get_artwork_attributes()
             return attributes
+        else:
+            logger.info('failed to scrapy expired url %s.' % url)
 
     @staticmethod
     def get_artwork_id(url):
@@ -134,7 +137,7 @@ class Scraper(object):
         try:
             with open('images/' + filename, 'wb') as image:
                 image.write(data)
-                logger.debug('image "%s" downloaded.' % filename)
+                logger.info('image "%s" downloaded.' % filename)
                 return True
         except EnvironmentError:
             logger.warning('failed to download image "%s"' % filename)

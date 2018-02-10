@@ -8,6 +8,11 @@ logger = logging.getLogger('default')
 
 class Database(object):
     def create_artwork_table(self):
+    """
+    Creates artwork table if it not exists.
+
+    
+    """
         self.conn.execute('CREATE TABLE IF NOT EXISTS ARTWORK('
                           'ID INT PRIMARY KEY          NOT NULL, '
                           'NAME           TEXT, '
@@ -46,13 +51,12 @@ class Database(object):
     def insert_or_replace_artwork(self, artwork):
         artwork['Adult'] = util.convert_boolean(artwork['Adult'])
         attribute_tuple = self.attribute_dictionary_to_tuple(artwork)
-        print(attribute_tuple)
         self.conn.execute('INSERT OR REPLACE INTO ARTWORK (ID, NAME, WIDTH, HEIGHT, AUTHOR, '
                           'POSTED, CATEGORY, THEME, SPECIES, GENDER, FAVORITES, '
                           'COMMENTS, VIEWS, ADULT, KEYWORDS, ADDED) VALUES(?, ?, ?, '
                           '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);', attribute_tuple)
         self.conn.commit()
-        logger.debug('inserted artwork information into artwork table.')
+        logger.debug('inserted/replaced artwork information into artwork table.')
 
     def get_artwork_ids(self):
         cursor = self.conn.cursor()
@@ -86,5 +90,7 @@ class Database(object):
 
         expired_records = filter(lambda t : self.if_time_expired(t, current_time, expire_time), cursor.fetchall())
         expired_artwork_ids = list(map(lambda x : x.__getitem__(0), expired_records))
+
+        logger.debug('%u expired records retrieved from database.' % len(expired_artwork_ids))
 
         return expired_artwork_ids

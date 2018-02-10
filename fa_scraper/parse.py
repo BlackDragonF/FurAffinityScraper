@@ -54,7 +54,7 @@ class Parser(object):
                 url_count = url_count + len(temp_urls)
                 urls = urls + temp_urls
 
-        logger.info("retrieved %u urls." % url_count)
+        logger.info("retrieved %u available urls." % url_count)
 
         return urls
 
@@ -130,9 +130,9 @@ class ArtworkParser(Parser):
         image_tag = self.bs.find('img', {'id': 'submissionImg'})
         if image_tag and image_tag.has_attr('src'):
             download_link = 'https:' + image_tag['src']
-            logger.debug('retrieved download link - "%s".' % download_link)
+            logger.info('retrieved download link - "%s".' % download_link)
         else:
-            logger.debug('unable to retrieve download link.')
+            logger.info('unable to retrieve download link.')
 
         return download_link
 
@@ -184,7 +184,6 @@ class ArtworkParser(Parser):
             try:
                 tag = getattr(self, tag_name)
             except AttributeError as error:
-                logger.debug('failed to get tag: %s.' % tag_name)
                 continue
             regex = ArtworkParser.REGEX_TABLE[attribute]
             content = self.get_matched_string(tag, regex)
@@ -210,7 +209,7 @@ class ArtworkParser(Parser):
 
         attributes['Adult'] = False
 
-        logger.debug(self.generate_unparsed_attributes_log(unparsed_set))
+        logger.info(self.generate_unparsed_attributes_log(unparsed_set))
 
         return attributes
 

@@ -2,8 +2,9 @@ from fa_scraper import *
 
 import argparse
 import sys
-
 import os
+
+import json
 
 import logging
 import logging.config
@@ -75,8 +76,10 @@ def config_logger(console_log_level):
     }
     config['handlers']['console']['level'] = console_log_level
     logging.config.dictConfig(config)
+
     logger = logging.getLogger('default')
     logger.info('set console log level to %s' % console_log_level)
+
     logger.debug('logger configured.')
     return logger
 
@@ -121,20 +124,36 @@ if __name__ == '__main__':
     else:
         logger.info('skipped integrity check.')
 
-    if arguments.scrapy_mode[0] == 'default':
+    scrapy_mode = arguments.scrapy_mode[0]
+    logger.info('scrapy mode set to %s' % scrapy_mode)
+    if scrapy_mode == 'default':
         while True:
             artwork = scraper.scrapy_pending_url()
             if artwork:
                 artwork['Added'] = util.get_current_time()
+
+                information = json.dumps(artwork)
+                logger.info('scrapied artwork information: %s' % information)
+
                 db.insert_or_replace_artwork(artwork)
-    elif arguments.scrapy_mode[0] == 'update':
+                logger.info('completed to scrapy artwork with ID: %u.' % artwork.get('ID'))
+    elif scrapy_mode == 'update':
         expired_artwork_ids = db.get_expired_artwork_ids(arguments.expire_time)
+        logger.info('retrieved all expired artwork IDs.')
+
         for artwork_id in expired_artwork_ids:
             artwork = scraper.scrapy_expired_url(util.generate_url_from_id(artwork_id))
             if artwork:
                 artwork['ID'] = artwork_id
                 artwork['Added'] = util.get_current_time()
+
+                information = json.dumps(artwork)
+                logger.info('updated artwork information: %s' % information)
+
                 db.insert_or_replace_artwork(artwork)
+                logger.info('completed to re-scrapy expired artwork(with ID: %u)\'s info .' % artwork.get('ID'))
 
     db.close_db(conn)
+
+    logger.info('exiting scraper...')
     exit(0)
