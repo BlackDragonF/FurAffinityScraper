@@ -12,16 +12,16 @@ import logging
 logger = logging.getLogger('default')
 
 def if_images_directory_exists():
-"""
-Checks if ./images/ exists.
+    """
+    Checks if ./images/ exists.
 
-Args:
-    None
+    Args:
+        None
 
-Returns:
-    A boolean indicates whether exists directory 'images' in current working
-directory.
-"""
+    Returns:
+        A boolean indicates whether exists directory 'images' in current working
+    directory.
+    """
     if os.path.exists('images'):
         if os.path.isdir('images'):
             logger.debug('images directory exists.')
@@ -29,18 +29,18 @@ directory.
     return False
 
 def create_images_directory():
-"""
-Create ./images/ if not exists.
+    """
+    Create ./images/ if not exists.
 
-Args:
-    None
+    Args:
+        None
 
-Returns:
-    False if there exists a FILE named 'images', which means cannot create a
-directory named 'images'.
-    True if successfully create 'images' directory or there exists a directory
-named 'images'.
-"""
+    Returns:
+        False if there exists a FILE named 'images', which means cannot create a
+    directory named 'images'.
+        True if successfully create 'images' directory or there exists a directory
+    named 'images'.
+    """
     if not if_images_directory_exists():
         if os.path.isfile('images'):
             logger.fatal('exists file named "images".')
