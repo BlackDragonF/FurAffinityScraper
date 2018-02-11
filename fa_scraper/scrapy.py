@@ -10,7 +10,7 @@ from fa_scraper.constant import *
 import logging
 logger = logging.getLogger('default')
 
-import queue
+import collections
 
 import time
 
@@ -47,15 +47,15 @@ class Scraper(object):
             logger.warning('request sent to "%s" returned error code: %u.' % (url, response.status_code))
 
         # add sleep here to avoid ddos to website
-        time.sleep(10)
+        time.sleep(self.scrapy_interval)
 
         return response.content
 
     def get_scrapying_url(self):
         # get next url to be scrapied from instance's scrapying queue
         try:
-            return self.scrapying_queue.get(False)
-        except queue.Empty:
+            return self.scrapying_queue.popleft()
+        except IndexError:
             # if scrapying queue is empty, then program should exit directly
             logger.fatal('scrapying queue empty.')
             exit(-1)
@@ -66,7 +66,7 @@ class Scraper(object):
         for url in urls:
             # check if url has been scrapied here
             if not url in self.scrapied_set:
-                self.scrapying_queue.put(url)
+                self.scrapying_queue.append(url)
                 url_count = url_count + 1
         logger.info('added %d urls to unscrapied queue.' % url_count)
 
@@ -74,10 +74,14 @@ class Scraper(object):
         # wrapper that add url to instance's scrapied set
         self.scrapied_set.add(url)
 
-    def __init__(self):
+    def __init__(self, scrapy_interval):
         # initialize scrapied set and scrapying queue
         self.scrapied_set = set()
-        self.scrapying_queue = queue.Queue()
+        self.scrapying_queue = collections.deque()
+
+        # set sleep interval between two requests
+        self.scrapy_interval = scrapy_interval
+        logger.info('set scrapy interval to %d' % scrapy_interval)
 
         # use cfscrape to avoid block from cloudflare
         self.scraper = cfscrape.create_scraper()

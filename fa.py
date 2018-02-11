@@ -3,11 +3,23 @@ from fa_scraper import *
 import argparse
 import sys
 import os
+import signal
+import pickle
 
 import json
 
 import logging
 import logging.config
+
+def signal_handler(signum, frame):
+    # exit signal received, use pickle to dump scraper
+    logger.info('exit signal received, saving scrapying progress...')
+    logger.info('current scraper with %u urls scrapied, and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
+    with open('scraper.cache', 'wb') as temp:
+        pickle.dump(scraper, temp)
+        logger.info('successfully saved scrapying progress to scraper.cache.')
+
+    exit(0)
 
 def parse_arguments():
     """
@@ -52,6 +64,15 @@ def parse_arguments():
         type = int,
         default = 15,
         help = 'sets expire time(days) for scrapied images, default: 15'
+    )
+
+    # scrapy-interval - int ,set scraper's sleep interval between two requests
+    argparser.add_argument(
+        '--scrapy-interval',
+        nargs = 1,
+        type = int,
+        default = 15,
+        help = 'sets sleep interval(seconds) between two network requests, default: 15'
     )
 
     # skip-check - when specified, skip integrity check step
@@ -159,9 +180,19 @@ if __name__ == '__main__':
     if not util.create_images_directory():
         exit(-1)
 
+    # set signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+
     # initialize database and scraper
     db = database.Database('fa_scraper.db')
-    scraper = scrapy.Scraper()
+    if util.if_cache_exists():
+        # trying to load scraper from scraper.cache
+        with open('scraper.cache', 'rb') as temp:
+            scraper = pickle.load(temp)
+            logger.info('continued with last scrapying progress, with %u scrapied urls and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
+        os.remove('scraper.cache')
+    else:
+        scraper = scrapy.Scraper(arguments.scrapy_interval)
     logger.info('initialization completed.')
 
     scrapy_mode = arguments.scrapy_mode[0]

@@ -107,5 +107,6 @@ venv.bak/
 *.db
 
 # own file
+scraper.cache
 guide.txt
 images/
