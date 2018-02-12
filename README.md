@@ -7,23 +7,23 @@ A scraper to furaffinity.net written with python. Uses [BeautifulSoup](https://w
 Any issues/pull requests are welcomed.
 
 Project directory generally structs below:
-.
-|-fa_scraper/       source code directory
-||-__init__.py      
-||-constant.py      global constant definition
-||-database.py      database module
-||-parse.py         parser module
-||-scrapy.py        main scrapy module  
-||-util.py          set of utility functions
-|-fa.py             command-line tools to scrapy furaffinity.net
-|-images/           downloaded images directory
-|-fa_scraper.db     sqlite database file that holds image attributes
-|-fa_scraper.log    log file that holds detailed log
-|-scraper.cache     cache file that used to resume scrapying process
-|-requirements.txt  project dependencies
-|-README.md         readme
-|-LICENSE           license
 
+    .
+    ├── fa.py                   command-line tool to scrapy furaffinity.net
+    ├── fa_scraper              fa_scraper module
+    │   ├── constant.py             global constant definition
+    │   ├── database.py             database module
+    │   ├── __init__.py             init
+    │   ├── parse.py                parser module
+    │   ├── scrapy.py               scraper module
+    │   └── util.py                 utility functions
+    ├── fa_scraper.db           database(generate by fa.py)
+    ├── fa_scraper.log          log file(generate by fa.py)
+    ├── images                  downloaded images(generate by fa.py)
+    ├── LICENSE                 license
+    ├── README.md               readme
+    ├── requirements.txt        dependencies
+    └── scraper.cache           cache used to resume(generate by fa.py)
 ### About
 
 I don't want to make any misunderstanding here. And this scraper is ONLY used to learn network scrapying.
