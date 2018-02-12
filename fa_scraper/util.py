@@ -70,7 +70,7 @@ def convert_boolean(boolean):
 
 def generate_url_from_id(artwork_id):
     # artwork_id here is an int
-    return BASE_URL + '/view/' + str(artwork_id)
+    return '/view/' + str(artwork_id)
 
 def if_cache_exists():
     if os.path.exists('scraper.cache'):

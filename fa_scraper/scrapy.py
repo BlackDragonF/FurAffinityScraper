@@ -146,7 +146,7 @@ class Scraper(object):
 
                 download_link = parser.get_download_link()
                 # TODO: filter will be added here
-                if download_link and attributes['Category'] == 'Artwork (Digital)':
+                if download_link and attributes['Category'] in SCRAPIED_CATEGORIES:
                     # set ID
                     ID = self.get_artwork_id(url)
                     attributes['ID'] = int(ID)

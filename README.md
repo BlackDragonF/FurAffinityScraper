@@ -41,8 +41,9 @@ Other dependencies are listed in requirements.txt.
 ## Installation
 
 1. Clone the repository by `git clone https://github.com/BlackDragonF/FurAffinityScraper`
-2. Install dependencies by running pip install -r requirements.txt, you may consider using virtualenv
-3. Execute command `python fa.py` to start the scraper with default arguments
+2. Install dependencies by running `pip install -r requirements.txt`, you may consider using virtualenv
+3. Make sure sqlite and node.js are installed
+4. Execute command `python fa.py` to start the scraper with default arguments
 
 ## Usage
     usage: fa.py [OPTIONS]

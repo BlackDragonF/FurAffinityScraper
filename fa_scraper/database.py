@@ -139,7 +139,7 @@ class Database(object):
         """
         delete_count = 0
         for artwork_id in artwork_ids:
-            # self.conn.execute('DELETE FROM ARTWORK WHERE ID = ?;' % artwork_id)
+            self.conn.execute('DELETE FROM ARTWORK WHERE ID = ?', (artwork_id,))
             delete_count = delete_count + 1
 
         self.conn.commit() # will not call commit repeatedly
