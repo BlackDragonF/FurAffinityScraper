@@ -27,12 +27,15 @@ Project directory generally structs below:
 ### About
 
 I don't want to make any misunderstanding here. And this scraper is ONLY used to learn network scrapying.
+
 Setting scrapy-interval to a small value will lead to heavy burden on servers, which is ABSOLUTELY IMMORAL. Think twice before ever trying to use it.
 
 ## Requirements
 
 Python 3.6+, Sqlite 3.22.0.
+
 Node.js is also required for cf-scrape.
+
 Other dependencies are listed in requirements.txt.
 
 ## Installation
