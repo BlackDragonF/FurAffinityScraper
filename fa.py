@@ -32,7 +32,7 @@ def parse_arguments():
         arguments - arguments parsed from command line
     """
     argparser = argparse.ArgumentParser(
-        usage = '%s [OPTION]' % sys.argv[0],
+        usage = '%s [OPTIONS]' % sys.argv[0],
         description = 'A scraper of furaffinity.net written with python.'
     )
 
