@@ -62,7 +62,7 @@ def parse_arguments():
         '--expire-time',
         nargs = 1,
         type = int,
-        default = 15,
+        default = [15],
         help = 'sets expire time(days) for scrapied images, default: 15'
     )
 
@@ -71,7 +71,7 @@ def parse_arguments():
         '--scrapy-interval',
         nargs = 1,
         type = int,
-        default = 15,
+        default = [15],
         help = 'sets sleep interval(seconds) between two network requests, default: 15'
     )
 
@@ -192,7 +192,7 @@ if __name__ == '__main__':
             logger.info('continued with last scrapying progress, with %u scrapied urls and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
         os.remove('scraper.cache')
     else:
-        scraper = scrapy.Scraper(arguments.scrapy_interval)
+        scraper = scrapy.Scraper(arguments.scrapy_interval[0])
     logger.info('initialization completed.')
 
     scrapy_mode = arguments.scrapy_mode[0]
@@ -228,7 +228,7 @@ if __name__ == '__main__':
                 logger.info('didn\'t scrapy artwork in current round.')
     elif scrapy_mode == 'update':
         # get expired artwork IDs from database
-        expired_artwork_ids = db.get_expired_artwork_ids(arguments.expire_time)
+        expired_artwork_ids = db.get_expired_artwork_ids(arguments.expire_time[0])
         logger.info('retrieved all expired artwork IDs.')
 
         for artwork_id in expired_artwork_ids:
