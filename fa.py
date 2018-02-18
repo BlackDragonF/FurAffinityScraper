@@ -82,6 +82,12 @@ def parse_arguments():
         help = 'skip integrity check(ONLY works in default mode) between database and images'
     )
 
+    argparser.add_argument(
+        '-c', '--cookies',
+        nargs = 1,
+        help = 'specify the user cookies(json format file) to be used, needed if you want more artworks'
+    )
+
     arguments = argparser.parse_args()
     return arguments
 
@@ -192,7 +198,9 @@ if __name__ == '__main__':
             logger.info('continued with last scrapying progress, with %u scrapied urls and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
         os.remove('scraper.cache')
     else:
-        scraper = scrapy.Scraper(arguments.scrapy_interval[0])
+        if arguments.cookies:
+            cookies = util.get_cookies(arguments.cookies[0])
+        scraper = scrapy.Scraper(arguments.scrapy_interval[0], cookies)
     logger.info('initialization completed.')
 
     scrapy_mode = arguments.scrapy_mode[0]

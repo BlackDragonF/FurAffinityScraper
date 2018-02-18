@@ -2,6 +2,7 @@ import os
 
 import time
 
+import json
 import pickle
 
 from dateutil.parser import parse
@@ -78,3 +79,8 @@ def if_cache_exists():
             logger.debug('scraper.cache exists.')
             return True
     return False
+
+def get_cookies(cookies_file):
+    with open(cookies_file, 'r') as file:
+        cookies = json.load(file)
+    return cookies

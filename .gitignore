@@ -106,7 +106,8 @@ venv.bak/
 # database file
 *.db
 
-# own file
+# owner file
 scraper.cache
 guide.txt
+cookies.json
 images/

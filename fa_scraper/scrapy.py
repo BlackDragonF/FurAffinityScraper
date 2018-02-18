@@ -10,6 +10,8 @@ from fa_scraper.constant import *
 import logging
 logger = logging.getLogger('default')
 
+import json
+
 import collections
 
 import time
@@ -34,7 +36,7 @@ class Scraper(object):
 
         try:
             # timeout is necessary here
-            response = self.scraper.get(url, timeout = 30)
+            response = self.scraper.get(url, timeout = 30, cookies = self.cookies)
         except:
             # catch all Exceptions here
             logger.warning('error when sending request to "%s".' % url)
@@ -74,7 +76,7 @@ class Scraper(object):
         # wrapper that add url to instance's scrapied set
         self.scrapied_set.add(url)
 
-    def __init__(self, scrapy_interval):
+    def __init__(self, scrapy_interval, cookies):
         # initialize scrapied set and scrapying queue
         self.scrapied_set = set()
         self.scrapying_queue = collections.deque()
@@ -82,6 +84,11 @@ class Scraper(object):
         # set sleep interval between two requests
         self.scrapy_interval = scrapy_interval
         logger.info('set scrapy interval to %d' % scrapy_interval)
+
+        # set cookies if provided
+        self.cookies = cookies
+        if self.cookies:
+            logger.info('provided cookies: %s' % json.dumps(cookies))
 
         # use cfscrape to avoid block from cloudflare
         self.scraper = cfscrape.create_scraper()
