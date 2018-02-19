@@ -71,8 +71,8 @@ def parse_arguments():
         '--scrapy-interval',
         nargs = 1,
         type = int,
-        default = [15],
-        help = 'sets sleep interval(seconds) between two network requests, default: 15'
+        default = [60],
+        help = 'sets sleep interval(seconds) between two network requests, default: 60'
     )
 
     # skip-check - when specified, skip integrity check step
@@ -85,7 +85,7 @@ def parse_arguments():
     argparser.add_argument(
         '-c', '--cookies',
         nargs = 1,
-        help = 'specify the user cookies(json format file) to be used, needed if you want more artworks'
+        help = 'specify the user cookies(json format file) to be used, needed if you want to scrape as login status'
     )
 
     arguments = argparser.parse_args()
@@ -199,7 +199,11 @@ if __name__ == '__main__':
         os.remove('scraper.cache')
     else:
         if arguments.cookies:
+            # load provided cookies from file
             cookies = util.get_cookies(arguments.cookies[0])
+        else:
+            # no cookies provided
+            cookies = {}
         scraper = scrapy.Scraper(arguments.scrapy_interval[0], cookies)
     logger.info('initialization completed.')
 

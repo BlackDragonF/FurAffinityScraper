@@ -171,11 +171,15 @@ website.
         if self.stats_tag:
             self.keywords_tag = self.stats_tag.find('div', {'id': 'keywords'})
             self.posted_tag = self.stats_tag.find('span', {'class': 'popup_date'})
+
+            self.rating_tag = self.stats_tag.find('div', {'align': 'left'})
+            self.rating_tag = self.rating_tag.find('img') if self.rating_tag else None
         else:
             # even cannot get stats_tag, still set tag to None to make sure other
             # method can access property accordingly
             self.keywords_tag = None
             self.posted_tag = None
+            self.rating_tag = None
             logger.debug('cannot parse stats_tag, set keywords_tag and posted_'
                          'tag to None.')
         logger.debug('parsed tags used to retrieve artwork attribute.')
@@ -254,6 +258,16 @@ website.
         else:
             return 'all attributes parsed.'
 
+    @staticmethod
+    def get_adult(rating_tag):
+        # use rating tag(img) to get if artwork contains adult content
+        # True if content, False if not
+        if rating_tag.has_attr('alt'):
+            if rating_tag['alt'] == 'Adult rating':
+                return True
+            return False
+        return False
+
     def get_artwork_attributes(self):
         """
         Get artwork's attributes from html.
@@ -279,6 +293,10 @@ website.
                 attributes['Posted'] = posted_time.strftime("%Y-%m-%d %H:%M")
             else:
                 unparsed_set.add('Posted')
+
+        # get adult
+        if self.rating_tag:
+            attributes['Adult'] = self.get_adult(self.rating_tag)
 
         # get other attributes
         for attribute in ArtworkParser.ARTWORK_ATTRIBUTES:
@@ -316,10 +334,6 @@ website.
                 # other attribute
                 attributes[attribute] = content
                 unparsed_set.remove(attribute)
-
-        # current scraper cannot login, so there is no NSFW content
-        # set 'Adult' directly to False
-        attributes['Adult'] = False
 
         logger.info(self.generate_unparsed_attributes_log(unparsed_set))
 

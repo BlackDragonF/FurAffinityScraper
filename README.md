@@ -9,7 +9,7 @@ Any issues/pull requests are welcomed.
 Project directory generally structs below:
 
     .
-    ├── fa.py                   command-line tool to scrapy furaffinity.net
+    ├── fa.py                   command-line tool to scrape furaffinity.net
     ├── fa_scraper              fa_scraper module
     │   ├── constant.py             global constant definition
     │   ├── database.py             database module
@@ -28,7 +28,7 @@ Project directory generally structs below:
 
 I don't want to make any misunderstanding here. And this scraper is ONLY used to learn network scrapying.
 
-Setting scrapy-interval to a small value will lead to heavy burden on servers, which is ABSOLUTELY IMMORAL. Think twice before ever trying to use it.
+Setting scrapy-interval to a small value will lead to heavy burden on servers, which is ABSOLUTELY IMMORAL. Think twice before trying to use it.
 
 ## Requirements
 
@@ -57,9 +57,25 @@ Other dependencies are listed in requirements.txt.
     --expire-time EXPIRE_TIME
                         sets expire time(days) for scrapied images, default: 15
     --scrapy-interval SCRAPY_INTERVAL
-                        sets sleep interval(seconds) between two network requests, default: 15
+                        sets sleep interval(seconds) between two network requests, default: 60
     --skip-check        skip integrity check(ONLY works in default mode) between database and images
+    -c COOKIES, --cookies COOKIES
+                        specify the user cookies(json format file) to be used,
+                        needed if you want to scrape as login status
 
+## Cookies
+
+To specify cookies to scrape in login state please add --cookies/-c COOKIES_FILE_NAME in command-line arguments.
+
+cookies file is a serialized json file which looks like:
+
+    {
+        "name1": "value1",
+        "name2": "value2",
+        "name3": "value3"
+    }
+
+You may use your web browser/web browser extension to get cookies of furaffinity.net.
 
 ## License
 

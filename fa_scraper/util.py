@@ -81,6 +81,7 @@ def if_cache_exists():
     return False
 
 def get_cookies(cookies_file):
+    # open files and deserialzed cookies as dictionary
     with open(cookies_file, 'r') as file:
         cookies = json.load(file)
     return cookies
