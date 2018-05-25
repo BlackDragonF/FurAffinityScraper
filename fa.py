@@ -199,7 +199,7 @@ if __name__ == '__main__':
             logger.info('continued with last scrapying progress, with %u scrapied urls and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
         os.remove('scraper.cache')
         # fix Scraper lazy load *manually* because pickle will NOT save class variable
-        Scraper.SCRAPIED_BASE = True
+        scrapy.Scraper.SCRAPIED_BASE = True
     else:
         if arguments.cookies:
             # load provided cookies from file
