@@ -36,20 +36,10 @@ def parse_arguments():
         description = 'A scraper of furaffinity.net written with python.'
     )
 
-    # log-level - cen be choosen from 'debug', 'info', 'warning', 'error', 'fatal'
-    # default is info, set the console log level
-    argparser.add_argument(
-        '--log-level',
-        nargs = 1,
-        default = ['info'],
-        choices = ['debug', 'info', 'warning', 'error', 'fatal'],
-        help = 'sets verbosity level for console log messages, default: info'
-    )
-
     # scrapy-mode - can be choosen from 'default', 'update'
     # default is 'default', set scrapy mode
     argparser.add_argument(
-        '--scrapy-mode',
+        '-m', '--scrapy-mode',
         nargs = 1,
         default = ['default'],
         choices = ['default', 'update'],
@@ -68,11 +58,18 @@ def parse_arguments():
 
     # scrapy-interval - int ,set scraper's sleep interval between two requests
     argparser.add_argument(
-        '--scrapy-interval',
+        '-i', '--scrapy-interval',
         nargs = 1,
         type = int,
         default = [60],
         help = 'sets sleep interval(seconds) between two network requests, default: 60'
+    )
+
+    # cookies - when specfied, use cookies(json) provided to scrape as logined
+    argparser.add_argument(
+        '-c', '--cookies',
+        nargs = 1,
+        help = 'specify the user cookies(json format file) to be used, needed if you want to scrape as login status'
     )
 
     # skip-check - when specified, skip integrity check step
@@ -82,10 +79,14 @@ def parse_arguments():
         help = 'skip integrity check(ONLY works in default mode) between database and images'
     )
 
+    # log-level - cen be choosen from 'debug', 'info', 'warning', 'error', 'fatal'
+    # default is info, set the console log level
     argparser.add_argument(
-        '-c', '--cookies',
+        '--log-level',
         nargs = 1,
-        help = 'specify the user cookies(json format file) to be used, needed if you want to scrape as login status'
+        default = ['info'],
+        choices = ['debug', 'info', 'warning', 'error', 'fatal'],
+        help = 'sets verbosity level for console log messages, default: info'
     )
 
     arguments = argparser.parse_args()
@@ -197,6 +198,8 @@ if __name__ == '__main__':
             scraper = pickle.load(temp)
             logger.info('continued with last scrapying progress, with %u scrapied urls and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
         os.remove('scraper.cache')
+        # fix Scraper lazy load *manually* because pickle will NOT save class variable
+        Scraper.SCRAPIED_BASE = True
     else:
         if arguments.cookies:
             # load provided cookies from file
