@@ -76,7 +76,7 @@ class Scraper(object):
         # wrapper that add url to instance's scrapied set
         self.scrapied_set.add(url)
 
-    def __init__(self, scrapy_interval, cookies):
+    def __init__(self, scrapy_interval, cookies = {}, begin_url = None):
         # initialize scrapied set and scrapying queue
         self.scrapied_set = set()
         self.scrapying_queue = collections.deque()
@@ -89,6 +89,10 @@ class Scraper(object):
         self.cookies = cookies
         if self.cookies:
             logger.info('provided cookies: %s' % json.dumps(cookies))
+
+        self.begin_url = begin_url
+        if self.begin_url:
+            logger.info('begin URL %s specified.' % begin_url)
 
         # use cfscrape to avoid block from cloudflare
         self.scraper = cfscrape.create_scraper()
@@ -108,12 +112,15 @@ class Scraper(object):
         """
         # lazy load technical, scrapy base url if hasn't
         if not Scraper.SCRAPIED_BASE:
-            main_html = self.open_url(BASE_URL)
+            # if begin URL is specified, use it
+            url = BASE_URL + self.begin_url if self.begin_url else BASE_URL
+            
+            main_html = self.open_url(url)
             if main_html:
                 parser = parse.Parser(main_html)
                 sites = parser.get_all_urls()
                 self.add_unscrapied_urls(sites)
-                logger.debug('base url scrapied.')
+                logger.debug('begin url %s scrapied.' % url)
                 Scraper.SCRAPIED_BASE = True
 
         # get next srcapying url

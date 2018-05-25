@@ -65,11 +65,18 @@ def parse_arguments():
         help = 'sets sleep interval(seconds) between two network requests, default: 60'
     )
 
-    # cookies - when specfied, use cookies(json) provided to scrape as logined
+    # cookies - filename, use cookies(json) provided to scrape as logined
     argparser.add_argument(
         '-c', '--cookies',
         nargs = 1,
         help = 'specify the user cookies(json format file) to be used, needed if you want to scrape as login status'
+    )
+
+    # base-url - sub-url scraper to replace with default '/', must be a valid sub-url defined in constant.py
+    argparser.add_argument(
+        '--begin-url',
+        nargs = 1,
+        help = 'begin sub-URL to replace default "/", "/user/blackdragonf" for example'
     )
 
     # skip-check - when specified, skip integrity check step
@@ -197,17 +204,25 @@ if __name__ == '__main__':
         with open('scraper.cache', 'rb') as temp:
             scraper = pickle.load(temp)
             logger.info('continued with last scrapying progress, with %u scrapied urls and %u scrapying urls.' % (len(scraper.scrapied_set), len(scraper.scrapying_queue)))
-        os.remove('scraper.cache')
+        # os.remove('scraper.cache') commented for potiential error
+
         # fix Scraper lazy load *manually* because pickle will NOT save class variable
         scrapy.Scraper.SCRAPIED_BASE = True
+        
+        # reset scrapy_interval
+        scraper.scrapy_interval = arguments.scrapy_interval[0]
     else:
+        cookies = {}
         if arguments.cookies:
             # load provided cookies from file
             cookies = util.get_cookies(arguments.cookies[0])
-        else:
-            # no cookies provided
-            cookies = {}
-        scraper = scrapy.Scraper(arguments.scrapy_interval[0], cookies)
+    
+        begin_url = None
+        if arguments.begin_url:
+            # alternative begin-url specified
+            begin_url = arguments.begin_url[0]
+
+        scraper = scrapy.Scraper(arguments.scrapy_interval[0], cookies, begin_url)
     logger.info('initialization completed.')
 
     scrapy_mode = arguments.scrapy_mode[0]

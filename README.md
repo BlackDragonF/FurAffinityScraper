@@ -46,22 +46,32 @@ Other dependencies are listed in requirements.txt.
 4. Execute command `python fa.py` to start the scraper with default arguments
 
 ## Usage
+
     usage: fa.py [OPTIONS]
 
+    A scraper of furaffinity.net written with python.
+
     optional arguments:
-    -h, --help          show this help message and exit
-    --log-level {debug,info,warning,error,fatal}
-                        sets verbosity level for console log messages, default: info
-    --scrapy-mode {default,update}
-                        sets scrapying mode, default: default
+    -h, --help            show this help message and exit
+    -m {default,update}, --scrapy-mode {default,update}
+                            sets scrapying mode, default: default
     --expire-time EXPIRE_TIME
-                        sets expire time(days) for scrapied images, default: 15
-    --scrapy-interval SCRAPY_INTERVAL
-                        sets sleep interval(seconds) between two network requests, default: 60
-    --skip-check        skip integrity check(ONLY works in default mode) between database and images
+                            sets expire time(days) for scrapied images, default:
+                            15
+    -i SCRAPY_INTERVAL, --scrapy-interval SCRAPY_INTERVAL
+                            sets sleep interval(seconds) between two network
+                            requests, default: 60
     -c COOKIES, --cookies COOKIES
-                        specify the user cookies(json format file) to be used,
-                        needed if you want to scrape as login status
+                            specify the user cookies(json format file) to be used,
+                            needed if you want to scrape as login status
+    --begin-url BEGIN_URL
+                            begin sub-URL to replace default "/",
+                            "/user/blackdragonf" for example
+    --skip-check          skip integrity check(ONLY works in default mode)
+                            between database and images
+    --log-level {debug,info,warning,error,fatal}
+                            sets verbosity level for console log messages,
+                            default: info
 
 ## Cookies
 
